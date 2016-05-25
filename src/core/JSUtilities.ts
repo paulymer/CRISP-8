@@ -1,6 +1,7 @@
 interface String {
     diplographLeftPad: (prefix: string, length: number) => string;
     diplographRightPad: (prefix: string, length: number) => string;
+    diplographStartsWith: (prefix: string) => boolean;
 }
 
 String.prototype.diplographLeftPad = function(prefix: string, length: number) {
@@ -17,6 +18,10 @@ String.prototype.diplographRightPad = function(prefix: string, length: number) {
         modifiedString = modifiedString + prefix;
     }
     return modifiedString;
+};
+
+String.prototype.diplographStartsWith = function(prefix: string) {
+    return this.lastIndexOf(prefix, 0) === 0;
 };
 
 interface Uint8Array {

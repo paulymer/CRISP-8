@@ -1,16 +1,30 @@
-/// <reference path="../core/crisp8.ts" />
+/// <reference path="../core/Crisp8.ts" />
 /// <reference path="NodeUtilities.ts" />
 
 const fs = require("fs");
 
-function main() {
-    let arguments = NodeUtilities.argvWithoutProcessName();
-    if (arguments.length === 0) {
-        printHelpAndExit();
+function crisp8main() {
+    let optionCallback = function(option: string, value: string) {
+        if (option === "--help") {
+            printUsageAndExit(0);
+        } else {
+            console.error("Unrecognized option " + option);
+            printUsageAndExit(1);
+        }
+    };
+
+    let errorCallback = function(errorString: string) {
+        console.error(errorString);
+        printUsageAndExit(1);
+    };
+
+    let remainingArguments = NodeUtilities.parseArguments([], optionCallback, errorCallback);
+    if (remainingArguments.length === 0) {
+        printUsageAndExit(1);
     }
 
     // TODO: Friendly error reporting for file problems, rom too large, etc.
-    let romPath = arguments[0];
+    let romPath = remainingArguments[0];
     let rom = fs.readFileSync(romPath);
 
     let crisp8 = new Crisp8();
@@ -18,11 +32,11 @@ function main() {
     console.log(crisp8.debugString());
 }
 
-function printHelpAndExit() {
+function printUsageAndExit(status: number) {
     console.log("CRISP-8: A CHIP-8 emulator.");
     console.log("  Command line CRISP-8 runner.");
     console.log("Usage: crisp8 romfile");
-    process.exit();
+    process.exit(status);
 }
 
-main();
+crisp8main();

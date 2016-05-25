@@ -15,7 +15,7 @@ function main() {
 
     let crisp8 = new Crisp8();
     crisp8.loadROM(rom);
-    console.log(crisp8);
+    console.log(crisp8.debugString());
 }
 
 function printHelpAndExit() {

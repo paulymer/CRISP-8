@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "inlineSourceMap": true,
+        "module": "commonjs",
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "preserveConstEnums": true
+    },
+}

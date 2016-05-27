@@ -11,7 +11,7 @@ class Crisp8 {
     private memory: Uint8Array;
     private registers: Uint8Array;
     private indexRegister: number;
-    private programCounter: number;
+    public programCounter: number;
 
     private stack: Uint8Array;
     private stackIndex: number;

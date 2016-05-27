@@ -2,6 +2,7 @@
 /// <reference path="../core/JSUtilities.ts" />
 
 const fs = require("fs");
+const path = require("path");
 
 class NodeUtilities {
     static argvWithoutProcessName() {
@@ -30,5 +31,25 @@ class NodeUtilities {
         }
 
         return remainingArguments;
+    }
+
+    static recursiveReadPathSync(currentPath: string) {
+        let results = new Array<string>();
+
+        let stat = fs.statSync(currentPath);
+        if (stat === undefined) {
+            return results;
+        } else {
+            results.push(currentPath);
+            if (stat.isDirectory()) {
+                let children = fs.readdirSync(currentPath);
+                for (let child of children) {
+                    let childPath = path.join(currentPath, child);
+                    results = results.concat(this.recursiveReadPathSync(childPath));
+                }
+            }
+        }
+
+        return results;
     }
 }

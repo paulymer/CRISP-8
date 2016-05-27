@@ -1,8 +1,6 @@
 /// <reference path="../core/Crisp8.ts" />
 /// <reference path="NodeUtilities.ts" />
 
-const fs = require("fs");
-
 function crisp8main() {
     let optionCallback = function(option: string, value: string) {
         if (option === "--help") {

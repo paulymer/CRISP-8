@@ -1,6 +1,8 @@
 /// <reference path="../../typedefinitions/node.d.ts" />
 /// <reference path="../core/JSUtilities.ts" />
 
+const fs = require("fs");
+
 class NodeUtilities {
     static argvWithoutProcessName() {
         return process.argv.slice(2);

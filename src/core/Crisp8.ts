@@ -35,6 +35,14 @@ class Crisp8 {
     }
 
     step() {
+        let opcode = (this.memory[this.programCounter] << 8) | (this.memory[this.programCounter + 1]);
+
+        if ((opcode & 0xF000) === 0x1000) {
+            // 1MMM: Jump to 0x0MMM
+            this.programCounter = opcode & 0xFFF;
+        } else {
+            throw "Unrecognized opcode " + opcode.toString(16);
+        }
     }
 
     debugString() {

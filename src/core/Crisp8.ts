@@ -62,6 +62,24 @@ class Crisp8 {
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
             this.registers[destinationRegisterIndex] = this.registers[sourceRegisterIndex];
             this.programCounter += 2;
+        } else if ((opcode & 0xF00F) === 0x8001) {
+            // 8XY1: Register VX |= register VY
+            let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
+            let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
+            this.registers[destinationRegisterIndex] |= this.registers[sourceRegisterIndex];
+            this.programCounter += 2;
+        } else if ((opcode & 0xF00F) === 0x8002) {
+            // 8XY2: Register VX &= register VY
+            let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
+            let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
+            this.registers[destinationRegisterIndex] &= this.registers[sourceRegisterIndex];
+            this.programCounter += 2;
+        } else if ((opcode & 0xF00F) === 0x8003) {
+            // 8XY3: Register VX ^= register VY
+            let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
+            let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
+            this.registers[destinationRegisterIndex] ^= this.registers[sourceRegisterIndex];
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

@@ -56,6 +56,12 @@ class Crisp8 {
             let literal = (opcode & 0x00FF);
             this.registers[registerIndex] = (this.registers[registerIndex] + literal) % 256;
             this.programCounter += 2;
+        } else if ((opcode & 0xF00F) === 0x8000) {
+            // 8XY0: Register VX = register VY
+            let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
+            let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
+            this.registers[destinationRegisterIndex] = this.registers[sourceRegisterIndex];
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

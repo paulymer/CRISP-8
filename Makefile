@@ -11,5 +11,8 @@ crisp8testnode:
 test: crisp8testnode
 	node build/crisp8test.js tests/crisp8
 
+testrebase: crisp8testnode
+	node build/crisp8test.js --rebase tests/crisp8
+
 clean:
 	rm -rf build

@@ -88,6 +88,21 @@ class NodeOutputTestRunner extends PlatformOutputTestRunner {
         }
     }
 
+    shouldRebaseTests() {
+        return this._options.rebase;
+    }
+
+    rebaseTest(test: OutputTest) {
+        let context = test.testRunnerContext as NodeOutputTestRunnerContext;
+        let actualOutput = test.actualOutput();
+
+        try {
+            fs.writeFileSync(context.expectedPath, actualOutput, { "encoding": "utf8" });
+        } catch (error) {
+            console.log("Failed to rebase test " + context.testPath + ": " + error);
+        }
+    }
+
     testDidPass(test: OutputTest) {
         let context = test.testRunnerContext as NodeOutputTestRunnerContext;
         if (this._options.verbose) {
@@ -96,7 +111,14 @@ class NodeOutputTestRunner extends PlatformOutputTestRunner {
     }
 
     testingDidFinish() {
-        console.log("Testing finished. " + this.passedTestCount() + " passed / " + this.failedTestCount() + " failed.");
+        let summaryStringParts = new Array<string>();
+        summaryStringParts.push(this.passedTestCount() + " passed");
+        summaryStringParts.push(this.failedTestCount() + " failed");
+        if (this._options.rebase) {
+            summaryStringParts.push(this.rebasedTestCount() + " rebased");
+        }
+
+        console.log("Testing finished. " + summaryStringParts.join(" / ") + ".");
     }
 }
 

@@ -8,6 +8,8 @@ function crisp8testmain() {
     let optionCallback = function(option: string, value: string) {
         if (option === "--help") {
             printUsageAndExit(0);
+        } else if (option === "--rebase") {
+            options.rebase = true;
         } else if (option === "--verbose") {
             options.verbose = true;
         } else {

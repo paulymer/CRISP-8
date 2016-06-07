@@ -38,10 +38,21 @@ class Crisp8 {
     step() {
         let opcode = (this.memory[this.programCounter] << 8) | (this.memory[this.programCounter + 1]);
 
+        // Flow Control
         if ((opcode & 0xF000) === 0x1000) {
             // 1MMM: Jump to 0x0MMM
             this.programCounter = opcode & 0xFFF;
-        } else {
+        }
+        // Arithmetic and Memory
+        else if ((opcode & 0xF000) === 0x6000) {
+            // 6XNN: Set register VX = literal NN
+            let registerIndex = (opcode & 0x0F00) >> 8;
+            let literal = (opcode & 0x00FF);
+            this.registers[registerIndex] = literal;
+            this.programCounter += 2;
+        }
+        // Unrecognized Opcode
+        else {
             throw new Crisp8Error("Unrecognized opcode " + opcode.toString(16) + " at address 0x" + this.programCounter.toString(16));
         }
     }

@@ -50,6 +50,12 @@ class Crisp8 {
             let literal = (opcode & 0x00FF);
             this.registers[registerIndex] = literal;
             this.programCounter += 2;
+        } else if ((opcode & 0xF000) === 0x7000) {
+            // 7XNN: Add NN to register VX
+            let registerIndex = (opcode & 0x0F00) >> 8;
+            let literal = (opcode & 0x00FF);
+            this.registers[registerIndex] = (this.registers[registerIndex] + literal) % 256;
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

@@ -23,5 +23,9 @@ class Crisp8OutputTest extends OutputTest {
 
         return crisp8.debugString();
     }
+
+    shouldCatchError(error: any) {
+        return (error instanceof Crisp8Error);
+    }
 }
 

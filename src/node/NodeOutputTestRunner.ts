@@ -52,7 +52,14 @@ class NodeOutputTestRunner extends PlatformOutputTestRunner {
         context.expectedPath = expectedPath;
 
         let input = fs.readFileSync(testPath);
-        let expected = fs.readFileSync(expectedPath, { "encoding": "utf8" });
+
+        let expected: string = undefined;
+        try {
+            expected = fs.readFileSync(expectedPath, { "encoding": "utf8" });
+        } catch (error) {
+            console.log("Couldn't read expected output for test " + testPath + ": " + error);
+            expected = "";
+        }
 
         let test = new this._testClass(input, expected);
         test.testRunnerContext = context;
@@ -76,6 +83,8 @@ class NodeOutputTestRunner extends PlatformOutputTestRunner {
             console.log(test.expectedOutput());
             console.log("Actual result was:");
             console.log(test.actualOutput());
+        } else if (result === OutputTestResult.OutputTestResultFailedThrewError) {
+            console.log("Test threw error: " + test.error());
         }
     }
 

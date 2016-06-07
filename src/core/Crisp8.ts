@@ -1,4 +1,5 @@
 /// <reference path="JSUtilities.ts" />
+/// <reference path="Crisp8Error.ts" />
 
 const Crisp8MemorySize = 0x1000;
 const Crisp8ROMOffset = 0x0200;
@@ -41,7 +42,7 @@ class Crisp8 {
             // 1MMM: Jump to 0x0MMM
             this.programCounter = opcode & 0xFFF;
         } else {
-            throw "Unrecognized opcode " + opcode.toString(16);
+            throw new Crisp8Error("Unrecognized opcode " + opcode.toString(16) + " at address 0x" + this.programCounter.toString(16));
         }
     }
 

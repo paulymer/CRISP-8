@@ -5,6 +5,7 @@ enum OutputTestResult {
     OutputTestResultPassed,
     OutputTestResultFailedIncorrectResult,
     OutputTestResultFailedTimeout,
+    OutputTestResultFailedThrewError,
 }
 
 interface OutputTestConstructor {
@@ -16,6 +17,8 @@ abstract class OutputTest {
     private _expectedOutput: string;
     private _actualOutput: string;
     private _result: OutputTestResult;
+    private _error: any;
+
     public testRunnerContext: any;
 
     constructor(input: Uint8Array, expectedOutput: string) {
@@ -25,7 +28,17 @@ abstract class OutputTest {
     }
 
     runTest() {
-        this._actualOutput = this.generateActualOutput();
+        try {
+            this._actualOutput = this.generateActualOutput();
+        } catch (error) {
+            if (this.shouldCatchError(error)) {
+                this._actualOutput = error.toString();
+            } else {
+                this._error = error;
+                this._result = OutputTestResult.OutputTestResultFailedThrewError;
+            }
+        }
+
         if (this._result === OutputTestResult.OutputTestResultUnknown) {
             this._result = (this._actualOutput === this._expectedOutput) ? OutputTestResult.OutputTestResultPassed : OutputTestResult.OutputTestResultFailedIncorrectResult;
         }
@@ -33,6 +46,7 @@ abstract class OutputTest {
     }
 
     abstract generateActualOutput(): string;
+    abstract shouldCatchError(error: any): boolean;
 
     protected testTimedOut() {
         this._result = OutputTestResult.OutputTestResultFailedTimeout;
@@ -52,5 +66,9 @@ abstract class OutputTest {
 
     result() {
         return this._result;
+    }
+
+    error() {
+        return this._error;
     }
 }

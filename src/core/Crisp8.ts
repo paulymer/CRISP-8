@@ -96,6 +96,7 @@ class Crisp8 {
 
     debugRegistersString() {
         let lines = new Array<string>();
+        lines.push("PC: 0x" + (this.programCounter).toString(16).diplographLeftPad("0", 4) + " I: " + this.indexRegister);
         this.registers.diplographEachSubarray(8, function(subarray: Uint8Array, baseIndex: number) {
             let items = new Array<string>();
             for (let i = 0; i < subarray.length; i++) {

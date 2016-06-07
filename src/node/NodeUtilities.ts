@@ -36,8 +36,11 @@ class NodeUtilities {
     static recursiveReadPathSync(currentPath: string) {
         let results = new Array<string>();
 
-        let stat = fs.statSync(currentPath);
+        let stat = fs.lstatSync(currentPath);
         if (stat === undefined) {
+            return results;
+        } else if (stat.isSymbolicLink()) {
+            // Don't follow symbolic links to avoid loops.
             return results;
         } else {
             results.push(currentPath);

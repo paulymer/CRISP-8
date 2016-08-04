@@ -80,6 +80,38 @@ class Crisp8 {
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
             this.registers[destinationRegisterIndex] ^= this.registers[sourceRegisterIndex];
             this.programCounter += 2;
+        } else if ((opcode & 0xF00F) === 0x8004) {
+            // 8XY4: Register VX += register VY, set VF to overflow bit
+            let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
+            let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
+            let sum = this.registers[sourceRegisterIndex] + this.registers[destinationRegisterIndex];
+            let overflow = sum >= 256 ? 1 : 0;
+            this.registers[destinationRegisterIndex] = sum % 256;
+            this.registers[0xF] = overflow;
+            this.programCounter += 2;
+        } else if ((opcode & 0xF00F) === 0x8005 || (opcode & 0xF00F) === 0x8007) {
+            // 8XY5: VX = VX - VY
+            // 8XY7: VX = VY - VX
+            // Both set VF to 1 if a borrow occurs, 0 otherwise.
+            let vyIsSubtrahend = (opcode & 0x000F) === 5;
+            let vxRegisterIndex = (opcode & 0x0F00) >> 8;
+            let vyRegisterIndex = (opcode & 0x00F0) >> 4;
+
+            let difference: number;
+            if (vyIsSubtrahend) {
+                difference = this.registers[vxRegisterIndex] - this.registers[vyRegisterIndex];
+            } else {
+                difference = this.registers[vyRegisterIndex] - this.registers[vxRegisterIndex];
+            }
+            let borrow = 0;
+            if (difference < 0) {
+                borrow = 1;
+                difference += 256;
+            }
+
+            this.registers[vxRegisterIndex] = difference;
+            this.registers[0xF] = borrow;
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

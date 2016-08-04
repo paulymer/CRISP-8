@@ -132,7 +132,7 @@ class Crisp8 {
         this.registers.diplographEachSubarray(8, function(subarray: Uint8Array, baseIndex: number) {
             let items = new Array<string>();
             for (let i = 0; i < subarray.length; i++) {
-                items.push("V" + (i + baseIndex).toString(16) + ": " + subarray[i]);
+                items.push("V" + (i + baseIndex).toString(16) + ": " + subarray[i].toString().diplographLeftPad(" ", 3));
             }
             lines.push(items.join("  "));
         });

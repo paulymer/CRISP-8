@@ -1,1 +1,1 @@
-Crisp8Error: Cannot write register values with base address 0x0fff. Memory out of bounds.
+Crisp8Error: Cannot access address 0x0FFF. Reserved for display.

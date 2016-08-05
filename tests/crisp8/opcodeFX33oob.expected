@@ -1,1 +1,1 @@
-Crisp8Error: Cannot write BCD encoding of register to address 0x0ffe. Memory out of bounds.
+Crisp8Error: Cannot access address 0x0FFE. Reserved for display.

@@ -9,6 +9,12 @@ const Crisp8StackSize = 16;
 
 const Crisp8LineLength = 16;
 
+const Crisp8ReservedMemoryRegions = [
+    {"start": 0x0000, "end": 0x01FF, "region": "Reserved for interpreter"},
+    {"start": 0x0EA0, "end": 0x0EFF, "region": "Reserved for callstack and other runtime variables"},
+    {"start": 0x0F00, "end": 0x0FFF, "region": "Reserved for display"},
+];
+
 class Crisp8 {
     private memory: Uint8Array;
     private registers: Uint8Array;
@@ -34,6 +40,36 @@ class Crisp8 {
 
     loadROM(rom: Uint8Array) {
         this.memory.set(rom, Crisp8ROMOffset);
+    }
+
+    private _validateMemoryAddress(address: number) {
+        if (address < 0) {
+            throw new Crisp8InternalError("Address " + Formatter.hexAddress(address) + " is negative.");
+        }
+        if (address >= Crisp8MemorySize) {
+            throw new Crisp8Error("Cannot access address " + Formatter.hexAddress(address) + ". Memory out of bounds.");
+        }
+        for (let reservedMemoryRegion of Crisp8ReservedMemoryRegions) {
+            if (address >= reservedMemoryRegion.start && address <= reservedMemoryRegion.end) {
+                throw new Crisp8Error("Cannot access address " + Formatter.hexAddress(address) + ". " + reservedMemoryRegion.region + ".");
+            }
+        }
+        return true;
+    }
+
+    writeMemory(address: number, value: number) {
+        if (value < 0 || value >= 0x100) {
+            throw new Crisp8InternalError("Cannot write value " + value + " to address " + Formatter.hexAddress(address) + ". Value is not an 8-bit unsigned value.");
+        }
+        if (this._validateMemoryAddress(address)) {
+            this.memory[address] = value;
+        }
+    }
+
+    readMemory(address: number) {
+        if (this._validateMemoryAddress(address)) {
+            return this.memory[address];
+        }
     }
 
     step() {
@@ -153,15 +189,11 @@ class Crisp8 {
             // FX33: Write the BCD encoding of VX to I, I+1, and I+2
             let baseAddress = this.indexRegister;
 
-            if (this.indexRegister >= 0x0FFE) {
-                throw new Crisp8Error("Cannot write BCD encoding of register to address " + Formatter.hexAddress(baseAddress) + ". Memory out of bounds.");
-            }
-
             let registerIndex = (opcode & 0x0F00) >> 8;
             let bcdDigits = Math.diplographBCD(this.registers[registerIndex], 3);
 
             for (let i = 0; i < 3; i++) {
-                this.memory[baseAddress + i] = bcdDigits[i];
+                this.writeMemory(baseAddress + i, bcdDigits[i]);
             }
 
             this.programCounter += 2;
@@ -172,15 +204,11 @@ class Crisp8 {
             let readOperation = (opcode & 0x00F0) >> 4 === 6;
             let baseAddress = this.indexRegister;
 
-            if (baseAddress + length > 0x1000) {
-                throw new Crisp8Error("Cannot " + (readOperation ? "read" : "write") + " register values with base address " + Formatter.hexAddress(baseAddress) + ". Memory out of bounds.");
-            }
-
             for (let i = 0; i < length; i++) {
                 if (readOperation) {
-                    this.registers[i] = this.memory[baseAddress + i];
+                    this.registers[i] = this.readMemory(baseAddress + i);
                 } else {
-                    this.memory[baseAddress + i] = this.registers[i];
+                    this.writeMemory(baseAddress + i, this.registers[i]);
                 }
             }
 

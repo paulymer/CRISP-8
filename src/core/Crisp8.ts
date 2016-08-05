@@ -136,6 +136,18 @@ class Crisp8 {
             let address = opcode & 0x0FFF;
             this.indexRegister = address;
             this.programCounter += 2;
+        } else if ((opcode & 0xF0FF) === 0xF01E) {
+            // FX1E: Adds VX to I. Sets VF to overflow bit (undocumented, but at least one piece of software relies on this [Spaceflight 2091!])
+            let registerIndex = (opcode & 0x0F00) >> 8;
+            let sum = this.indexRegister += this.registers[registerIndex];
+            let overflow = 0;
+            if (sum >= 0x1000) {
+                sum -= 0x1000;
+                overflow = 1;
+            }
+            this.indexRegister = sum;
+            this.registers[0xF] = overflow;
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

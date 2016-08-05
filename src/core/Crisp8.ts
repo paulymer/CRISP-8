@@ -164,6 +164,26 @@ class Crisp8 {
             }
 
             this.programCounter += 2;
+        } else if ((opcode & 0xF0FF) === 0xF055 || (opcode & 0xF0FF) === 0xF065) {
+            // FX55: Write V0...VX (inclusive) to I...(I+X)
+            // FX65: Read I...(I+X) (inclusive) to V0...VX
+            let length = ((opcode & 0x0F00) >> 8) + 1;
+            let readOperation = (opcode & 0x00F0) >> 4 === 6;
+            let baseAddress = this.indexRegister;
+
+            if (baseAddress + length > 0x1000) {
+                throw new Crisp8Error("Cannot " + (readOperation ? "read" : "write") + " register values with base address 0x" + baseAddress.toString(16).diplographLeftPad("0", 4) + ". Memory out of bounds.");
+            }
+
+            for (let i = 0; i < length; i++) {
+                if (readOperation) {
+                    this.registers[i] = this.memory[baseAddress + i];
+                } else {
+                    this.memory[baseAddress + i] = this.registers[i];
+                }
+            }
+
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

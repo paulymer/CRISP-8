@@ -131,6 +131,11 @@ class Crisp8 {
             let value = Math.diplographRandomInt(0, 256) & mask;
             this.registers[destinationRegisterIndex] = value;
             this.programCounter += 2;
+        } else if ((opcode & 0xF000) === 0xA000) {
+            // ANNN: Register I = address NNN
+            let address = opcode & 0x0FFF;
+            this.indexRegister = address;
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

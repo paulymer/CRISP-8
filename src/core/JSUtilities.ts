@@ -33,3 +33,13 @@ Uint8Array.prototype.diplographEachSubarray = function(length: number, callback:
         callback(this.subarray(i, i + length), i);
     }
 };
+
+interface Math {
+    diplographRandomInt: (min: number, max: number) => number;
+}
+
+Math.diplographRandomInt = function(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+};

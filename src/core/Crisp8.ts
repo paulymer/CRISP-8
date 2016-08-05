@@ -124,6 +124,13 @@ class Crisp8 {
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
             this.registers[destinationRegisterIndex] = this.registers[sourceRegisterIndex] << 1;
             this.programCounter += 2;
+        } else if ((opcode & 0xF000) === 0xC000) {
+            // CXNN: Register VX = rand() & NN
+            let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
+            let mask = opcode & 0x00FF;
+            let value = Math.diplographRandomInt(0, 256) & mask;
+            this.registers[destinationRegisterIndex] = value;
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

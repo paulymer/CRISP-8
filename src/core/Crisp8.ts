@@ -1,5 +1,6 @@
-/// <reference path="JSUtilities.ts" />
 /// <reference path="Crisp8Error.ts" />
+/// <reference path="Formatter.ts" />
+/// <reference path="JSUtilities.ts" />
 
 const Crisp8MemorySize = 0x1000;
 const Crisp8ROMOffset = 0x0200;
@@ -153,7 +154,7 @@ class Crisp8 {
             let baseAddress = this.indexRegister;
 
             if (this.indexRegister >= 0x0FFE) {
-                throw new Crisp8Error("Cannot write BCD encoding of register to address 0x" + baseAddress.toString(16).diplographLeftPad("0", 4) + ". Memory out of bounds.");
+                throw new Crisp8Error("Cannot write BCD encoding of register to address " + Formatter.hexAddress(baseAddress) + ". Memory out of bounds.");
             }
 
             let registerIndex = (opcode & 0x0F00) >> 8;
@@ -172,7 +173,7 @@ class Crisp8 {
             let baseAddress = this.indexRegister;
 
             if (baseAddress + length > 0x1000) {
-                throw new Crisp8Error("Cannot " + (readOperation ? "read" : "write") + " register values with base address 0x" + baseAddress.toString(16).diplographLeftPad("0", 4) + ". Memory out of bounds.");
+                throw new Crisp8Error("Cannot " + (readOperation ? "read" : "write") + " register values with base address " + Formatter.hexAddress(baseAddress) + ". Memory out of bounds.");
             }
 
             for (let i = 0; i < length; i++) {
@@ -187,7 +188,7 @@ class Crisp8 {
         }
         // Unrecognized Opcode
         else {
-            throw new Crisp8Error("Unrecognized opcode " + opcode.toString(16) + " at address 0x" + this.programCounter.toString(16));
+            throw new Crisp8Error("Unrecognized opcode " + opcode.toString(16) + " at address " + Formatter.hexAddress(this.programCounter));
         }
     }
 
@@ -200,7 +201,7 @@ class Crisp8 {
 
     debugRegistersString() {
         let lines = new Array<string>();
-        lines.push("PC: 0x" + (this.programCounter).toString(16).diplographLeftPad("0", 4) + "  I: 0x" + this.indexRegister.toString(16).diplographLeftPad("0", 4));
+        lines.push("PC: " + Formatter.hexAddress(this.programCounter) + "  I: " + Formatter.hexAddress(this.indexRegister));
         this.registers.diplographEachSubarray(8, function(subarray: Uint8Array, baseIndex: number) {
             let items = new Array<string>();
             for (let i = 0; i < subarray.length; i++) {

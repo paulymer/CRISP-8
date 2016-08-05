@@ -148,6 +148,22 @@ class Crisp8 {
             this.indexRegister = sum;
             this.registers[0xF] = overflow;
             this.programCounter += 2;
+        } else if ((opcode & 0xF0FF) === 0xF033) {
+            // FX33: Write the BCD encoding of VX to I, I+1, and I+2
+            let baseAddress = this.indexRegister;
+
+            if (this.indexRegister >= 0x0FFE) {
+                throw new Crisp8Error("Cannot write BCD encoding of register to address 0x" + baseAddress.toString(16).diplographLeftPad("0", 4) + ". Memory out of bounds.");
+            }
+
+            let registerIndex = (opcode & 0x0F00) >> 8;
+            let bcdDigits = Math.diplographBCD(this.registers[registerIndex], 3);
+
+            for (let i = 0; i < 3; i++) {
+                this.memory[baseAddress + i] = bcdDigits[i];
+            }
+
+            this.programCounter += 2;
         }
         // Unrecognized Opcode
         else {

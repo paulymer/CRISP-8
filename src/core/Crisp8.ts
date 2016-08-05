@@ -43,6 +43,9 @@ class Crisp8 {
     }
 
     private _validateMemoryAddress(address: number) {
+        if (!Number.isInteger(address)) {
+            throw new Crisp8InternalError("Address " + address.toString() + " is not an integer.");
+        }
         if (address < 0) {
             throw new Crisp8InternalError("Address " + Formatter.hexAddress(address) + " is negative.");
         }

@@ -65,3 +65,12 @@ Math.diplographRandomInt = function(min: number, max: number) {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min;
 };
+
+interface NumberConstructor {
+    isInteger: (value: number) => boolean;
+}
+
+// ES6 Polyfill
+Number.isInteger = Number.isInteger || function(value: number) {
+  return typeof value === "number" && isFinite(value) && Math.floor(value) === value;
+};

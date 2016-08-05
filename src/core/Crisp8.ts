@@ -16,30 +16,30 @@ const Crisp8ReservedMemoryRegions = [
 ];
 
 class Crisp8 {
-    private memory: Uint8Array;
-    private registers: Uint8Array;
-    private indexRegister: number;
+    private _memory: Uint8Array;
+    private _registers: Uint8Array;
+    private _indexRegister: number;
     public programCounter: number;
 
-    private stack: Uint8Array;
-    private stackIndex: number;
+    private _stack: Uint8Array;
+    private _stackIndex: number;
 
     constructor() {
         this.reset();
     }
 
     reset() {
-        this.memory = new Uint8Array(Crisp8MemorySize);
-        this.registers = new Uint8Array(Crisp8RegisterCount);
-        this.indexRegister = 0;
+        this._memory = new Uint8Array(Crisp8MemorySize);
+        this._registers = new Uint8Array(Crisp8RegisterCount);
+        this._indexRegister = 0;
         this.programCounter = Crisp8ROMOffset;
 
-        this.stack = new Uint8Array(Crisp8StackSize);
-        this.stackIndex = -1;
+        this._stack = new Uint8Array(Crisp8StackSize);
+        this._stackIndex = -1;
     }
 
     loadROM(rom: Uint8Array) {
-        this.memory.set(rom, Crisp8ROMOffset);
+        this._memory.set(rom, Crisp8ROMOffset);
     }
 
     private _validateMemoryAddress(address: number) {
@@ -65,18 +65,18 @@ class Crisp8 {
             throw new Crisp8InternalError("Cannot write value " + value + " to address " + Formatter.hexAddress(address) + ". Value is not an 8-bit unsigned value.");
         }
         if (this._validateMemoryAddress(address)) {
-            this.memory[address] = value;
+            this._memory[address] = value;
         }
     }
 
     readMemory(address: number) {
         if (this._validateMemoryAddress(address)) {
-            return this.memory[address];
+            return this._memory[address];
         }
     }
 
     step() {
-        let opcode = (this.memory[this.programCounter] << 8) | (this.memory[this.programCounter + 1]);
+        let opcode = (this._memory[this.programCounter] << 8) | (this._memory[this.programCounter + 1]);
 
         // Flow Control
         if ((opcode & 0xF000) === 0x1000) {
@@ -88,46 +88,46 @@ class Crisp8 {
             // 6XNN: Set register VX = literal NN
             let registerIndex = (opcode & 0x0F00) >> 8;
             let literal = (opcode & 0x00FF);
-            this.registers[registerIndex] = literal;
+            this._registers[registerIndex] = literal;
             this.programCounter += 2;
         } else if ((opcode & 0xF000) === 0x7000) {
             // 7XNN: Add NN to register VX
             let registerIndex = (opcode & 0x0F00) >> 8;
             let literal = (opcode & 0x00FF);
-            this.registers[registerIndex] = (this.registers[registerIndex] + literal) % 256;
+            this._registers[registerIndex] = (this._registers[registerIndex] + literal) % 256;
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x8000) {
             // 8XY0: Register VX = register VY
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
-            this.registers[destinationRegisterIndex] = this.registers[sourceRegisterIndex];
+            this._registers[destinationRegisterIndex] = this._registers[sourceRegisterIndex];
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x8001) {
             // 8XY1: Register VX |= register VY
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
-            this.registers[destinationRegisterIndex] |= this.registers[sourceRegisterIndex];
+            this._registers[destinationRegisterIndex] |= this._registers[sourceRegisterIndex];
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x8002) {
             // 8XY2: Register VX &= register VY
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
-            this.registers[destinationRegisterIndex] &= this.registers[sourceRegisterIndex];
+            this._registers[destinationRegisterIndex] &= this._registers[sourceRegisterIndex];
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x8003) {
             // 8XY3: Register VX ^= register VY
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
-            this.registers[destinationRegisterIndex] ^= this.registers[sourceRegisterIndex];
+            this._registers[destinationRegisterIndex] ^= this._registers[sourceRegisterIndex];
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x8004) {
             // 8XY4: Register VX += register VY, set VF to overflow bit
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
-            let sum = this.registers[sourceRegisterIndex] + this.registers[destinationRegisterIndex];
+            let sum = this._registers[sourceRegisterIndex] + this._registers[destinationRegisterIndex];
             let overflow = sum >= 256 ? 1 : 0;
-            this.registers[destinationRegisterIndex] = sum % 256;
-            this.registers[0xF] = overflow;
+            this._registers[destinationRegisterIndex] = sum % 256;
+            this._registers[0xF] = overflow;
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x8005 || (opcode & 0xF00F) === 0x8007) {
             // 8XY5: VX = VX - VY
@@ -139,9 +139,9 @@ class Crisp8 {
 
             let difference: number;
             if (vyIsSubtrahend) {
-                difference = this.registers[vxRegisterIndex] - this.registers[vyRegisterIndex];
+                difference = this._registers[vxRegisterIndex] - this._registers[vyRegisterIndex];
             } else {
-                difference = this.registers[vyRegisterIndex] - this.registers[vxRegisterIndex];
+                difference = this._registers[vyRegisterIndex] - this._registers[vxRegisterIndex];
             }
             let borrow = 0;
             if (difference < 0) {
@@ -149,51 +149,51 @@ class Crisp8 {
                 difference += 256;
             }
 
-            this.registers[vxRegisterIndex] = difference;
-            this.registers[0xF] = borrow;
+            this._registers[vxRegisterIndex] = difference;
+            this._registers[0xF] = borrow;
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x8006) {
             // 8XY6: Register VX = register VY >> 1
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
-            this.registers[destinationRegisterIndex] = this.registers[sourceRegisterIndex] >> 1;
+            this._registers[destinationRegisterIndex] = this._registers[sourceRegisterIndex] >> 1;
             this.programCounter += 2;
         } else if ((opcode & 0xF00F) === 0x800E) {
             // 8XYE: Register VX = register VY << 1
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let sourceRegisterIndex = (opcode & 0x00F0) >> 4;
-            this.registers[destinationRegisterIndex] = this.registers[sourceRegisterIndex] << 1;
+            this._registers[destinationRegisterIndex] = this._registers[sourceRegisterIndex] << 1;
             this.programCounter += 2;
         } else if ((opcode & 0xF000) === 0xC000) {
             // CXNN: Register VX = rand() & NN
             let destinationRegisterIndex = (opcode & 0x0F00) >> 8;
             let mask = opcode & 0x00FF;
             let value = Math.diplographRandomInt(0, 256) & mask;
-            this.registers[destinationRegisterIndex] = value;
+            this._registers[destinationRegisterIndex] = value;
             this.programCounter += 2;
         } else if ((opcode & 0xF000) === 0xA000) {
             // ANNN: Register I = address NNN
             let address = opcode & 0x0FFF;
-            this.indexRegister = address;
+            this._indexRegister = address;
             this.programCounter += 2;
         } else if ((opcode & 0xF0FF) === 0xF01E) {
             // FX1E: Adds VX to I. Sets VF to overflow bit (undocumented, but at least one piece of software relies on this [Spaceflight 2091!])
             let registerIndex = (opcode & 0x0F00) >> 8;
-            let sum = this.indexRegister += this.registers[registerIndex];
+            let sum = this._indexRegister += this._registers[registerIndex];
             let overflow = 0;
             if (sum >= 0x1000) {
                 sum -= 0x1000;
                 overflow = 1;
             }
-            this.indexRegister = sum;
-            this.registers[0xF] = overflow;
+            this._indexRegister = sum;
+            this._registers[0xF] = overflow;
             this.programCounter += 2;
         } else if ((opcode & 0xF0FF) === 0xF033) {
             // FX33: Write the BCD encoding of VX to I, I+1, and I+2
-            let baseAddress = this.indexRegister;
+            let baseAddress = this._indexRegister;
 
             let registerIndex = (opcode & 0x0F00) >> 8;
-            let bcdDigits = Math.diplographBCD(this.registers[registerIndex], 3);
+            let bcdDigits = Math.diplographBCD(this._registers[registerIndex], 3);
 
             for (let i = 0; i < 3; i++) {
                 this.writeMemory(baseAddress + i, bcdDigits[i]);
@@ -205,13 +205,13 @@ class Crisp8 {
             // FX65: Read I...(I+X) (inclusive) to V0...VX
             let length = ((opcode & 0x0F00) >> 8) + 1;
             let readOperation = (opcode & 0x00F0) >> 4 === 6;
-            let baseAddress = this.indexRegister;
+            let baseAddress = this._indexRegister;
 
             for (let i = 0; i < length; i++) {
                 if (readOperation) {
-                    this.registers[i] = this.readMemory(baseAddress + i);
+                    this._registers[i] = this.readMemory(baseAddress + i);
                 } else {
-                    this.writeMemory(baseAddress + i, this.registers[i]);
+                    this.writeMemory(baseAddress + i, this._registers[i]);
                 }
             }
 
@@ -232,8 +232,8 @@ class Crisp8 {
 
     debugRegistersString() {
         let lines = new Array<string>();
-        lines.push("PC: " + Formatter.hexAddress(this.programCounter) + "  I: " + Formatter.hexAddress(this.indexRegister));
-        this.registers.diplographEachSubarray(8, function(subarray: Uint8Array, baseIndex: number) {
+        lines.push("PC: " + Formatter.hexAddress(this.programCounter) + "  I: " + Formatter.hexAddress(this._indexRegister));
+        this._registers.diplographEachSubarray(8, function(subarray: Uint8Array, baseIndex: number) {
             let items = new Array<string>();
             for (let i = 0; i < subarray.length; i++) {
                 items.push("V" + (i + baseIndex).toString(16) + ": " + subarray[i].toString().diplographLeftPad(" ", 3));
@@ -245,7 +245,7 @@ class Crisp8 {
 
     debugMemoryString() {
         let lines = new Array<string>();
-        this.memory.diplographEachSubarray(Crisp8LineLength, function (subarray: Uint8Array, baseIndex: number) {
+        this._memory.diplographEachSubarray(Crisp8LineLength, function (subarray: Uint8Array, baseIndex: number) {
             if (Crisp8.Uint8ArayIsZeroed(subarray)) {
                 return;
             }

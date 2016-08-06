@@ -81,7 +81,12 @@ class Crisp8 {
         // Flow Control
         if ((opcode & 0xF000) === 0x1000) {
             // 1MMM: Jump to 0x0MMM
-            this.programCounter = opcode & 0xFFF;
+            this.programCounter = opcode & 0x0FFF;
+        } else if ((opcode & 0xF000) === 0xB000) {
+            // BNNN: Jump to V0 + NNN
+            let baseAddress = opcode & 0x0FFF;
+            let address = baseAddress + this._registers[0x0];
+            this.programCounter = address;
         }
         // Arithmetic and Memory
         else if ((opcode & 0xF000) === 0x6000) {

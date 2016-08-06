@@ -79,7 +79,9 @@ class Crisp8 {
         let opcode = (this._memory[this.programCounter] << 8) | (this._memory[this.programCounter + 1]);
 
         // Flow Control
-        if ((opcode & 0xF000) === 0x1000) {
+        if ((opcode & 0xF000) === 0x0000) {
+            throw new Crisp8Error("Opcode 0NNN (jump to native routine) is not available in CRISP-8.");
+        } else if ((opcode & 0xF000) === 0x1000) {
             // 1MMM: Jump to 0x0MMM
             this.programCounter = opcode & 0x0FFF;
         } else if ((opcode & 0xF000) === 0xB000) {

@@ -89,6 +89,25 @@ class Crisp8 {
             let baseAddress = opcode & 0x0FFF;
             let address = baseAddress + this._registers[0x0];
             this.programCounter = address;
+        } else if ((opcode & 0xF000) === 0x3000 || (opcode & 0xF000) === 0x4000) {
+            // 3XNN: Skip next instruction if VX == NN
+            // 4XNN: Skip next instruction if VX != NN
+            let testEquality = (opcode & 0xF000) === 0x3000;
+            let registerIndex = (opcode & 0x0F00) >> 8;
+            let literal = (opcode & 0x00FF);
+
+            let skipNextInstruction: boolean;
+            if (testEquality) {
+                skipNextInstruction = this._registers[registerIndex] === literal;
+            } else {
+                skipNextInstruction = this._registers[registerIndex] !== literal;
+            }
+
+            if (skipNextInstruction) {
+                this.programCounter += 4;
+            } else {
+                this.programCounter += 2;
+            }
         }
         // Arithmetic and Memory
         else if ((opcode & 0xF000) === 0x6000) {

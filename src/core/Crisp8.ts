@@ -21,7 +21,7 @@ class Crisp8 {
     private _indexRegister: number;
     public programCounter: number;
 
-    private _stack: Uint8Array;
+    private _stack: Uint16Array;
     private _stackIndex: number;
 
     constructor() {
@@ -34,7 +34,7 @@ class Crisp8 {
         this._indexRegister = 0;
         this.programCounter = Crisp8ROMOffset;
 
-        this._stack = new Uint8Array(Crisp8StackSize);
+        this._stack = new Uint16Array(Crisp8StackSize);
         this._stackIndex = -1;
     }
 
@@ -91,9 +91,7 @@ class Crisp8 {
         let opcode = (this._memory[this.programCounter] << 8) | (this._memory[this.programCounter + 1]);
 
         // Flow Control
-        if ((opcode & 0xF000) === 0x0000) {
-            throw new Crisp8Error("Opcode 0NNN (jump to native routine) is not available in CRISP-8.");
-        } else if ((opcode & 0xF000) === 0x1000) {
+        if ((opcode & 0xF000) === 0x1000) {
             // 1MMM: Jump to 0x0MMM
             this.programCounter = opcode & 0x0FFF;
         } else if ((opcode & 0xF000) === 0xB000) {
@@ -133,6 +131,27 @@ class Crisp8 {
             } else {
                 this.programCounter += 2;
             }
+        } else if ((opcode & 0xF000) === 0x2000) {
+            // 2NNN: Jump to subroutine 2NNN
+            let subroutineAddress = opcode & 0x0FFF;
+
+            this._validateMemoryAddress(subroutineAddress);
+            if (this._stackIndex >= Crisp8StackSize) {
+                throw new Crisp8Error("Cannot jump to subroutine " + Formatter.hexAddress(subroutineAddress) + ". Stack size limit exceeded.");
+            }
+
+            this._stackIndex += 1;
+            this._stack[this._stackIndex] = this.programCounter;
+            this.programCounter = subroutineAddress;
+        } else if ((opcode & 0xFFFF) === 0x00EE) {
+            // 00EE: Return from subroutine
+            if (this._stackIndex < 0) {
+                throw new Crisp8Error("Cannot return from subroutine. Not running a subroutine.");
+            }
+
+            this.programCounter = this._stack[this._stackIndex] + 2;
+            this._stack[this._stackIndex] = 0;
+            this._stackIndex -= 1;
         }
         // Arithmetic and Memory
         else if ((opcode & 0xF000) === 0x6000) {
@@ -269,7 +288,9 @@ class Crisp8 {
             this.programCounter += 2;
         }
         // Unrecognized Opcode
-        else {
+        else if ((opcode & 0xF000) === 0x0000) {
+            throw new Crisp8Error("Opcode 0NNN (jump to native routine) is not available in CRISP-8.");
+        } else {
             throw new Crisp8Error("Unrecognized opcode " + opcode.toString(16) + " at address " + Formatter.hexAddress(this.programCounter));
         }
     }

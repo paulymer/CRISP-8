@@ -42,6 +42,18 @@ class Crisp8 {
         this._memory.set(rom, Crisp8ROMOffset);
     }
 
+    private _nibblesForWord(word: number) {
+        if (!Number.isInteger(word) || word < 0) {
+            throw new Crisp8InternalError("Cannot break word " + word.toString() + " into nibbles. Doesn't appear to be a word.");
+        }
+        let nibbles = new Array<number>();
+        while (word > 0) {
+            nibbles.unshift(word & 0xF);
+            word >>= 4;
+        }
+        return nibbles;
+    }
+
     private _validateMemoryAddress(address: number) {
         if (!Number.isInteger(address)) {
             throw new Crisp8InternalError("Address " + address.toString() + " is not an integer.");
@@ -89,18 +101,31 @@ class Crisp8 {
             let baseAddress = opcode & 0x0FFF;
             let address = baseAddress + this._registers[0x0];
             this.programCounter = address;
-        } else if ((opcode & 0xF000) === 0x3000 || (opcode & 0xF000) === 0x4000) {
+        } else if ((opcode & 0xF000) === 0x3000 || (opcode & 0xF000) === 0x4000 || (opcode & 0xF00F) === 0x5000 || (opcode & 0xF00F) === 0x9000) {
             // 3XNN: Skip next instruction if VX == NN
             // 4XNN: Skip next instruction if VX != NN
-            let testEquality = (opcode & 0xF000) === 0x3000;
-            let registerIndex = (opcode & 0x0F00) >> 8;
-            let literal = (opcode & 0x00FF);
+            // 5XY0: Ship next instruction if VX == VY
+            // 9XY0: Skip next instruction if VX != VY
+            let leftValue: number;
+            let rightValue: number;
+            let testEquality: boolean;
+
+            let nibbles = this._nibblesForWord(opcode);
+            if (nibbles[0] === 3 || nibbles[0] === 4) {
+                leftValue = this._registers[nibbles[1]];
+                rightValue = opcode & 0x00FF;
+                testEquality = nibbles[0] === 3;
+            } else {
+                leftValue = this._registers[nibbles[1]];
+                rightValue = this._registers[nibbles[2]];
+                testEquality = nibbles[0] === 5;
+            }
 
             let skipNextInstruction: boolean;
             if (testEquality) {
-                skipNextInstruction = this._registers[registerIndex] === literal;
+                skipNextInstruction = leftValue === rightValue;
             } else {
-                skipNextInstruction = this._registers[registerIndex] !== literal;
+                skipNextInstruction = leftValue !== rightValue;
             }
 
             if (skipNextInstruction) {
